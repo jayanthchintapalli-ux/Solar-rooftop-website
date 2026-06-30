@@ -24,6 +24,16 @@ export const SUBSIDY_CAP = 78000; // hard cap
 /** Cost the installer pays (in credits) to unlock one lead. */
 export const CREDITS_PER_LEAD_UNLOCK = 50;
 
+/** Rupee price of a single credit (used for top-ups and revenue reporting). */
+export const CREDIT_PRICE_INR = 10;
+
+/** Credit top-up packs offered on the buy-credits page. */
+export const CREDIT_PACKS = [
+  { credits: 100, label: "Starter" },
+  { credits: 250, label: "Growth" },
+  { credits: 500, label: "Pro" },
+] as const;
+
 /** Maximum number of installers that can buy the same lead. */
 export const MAX_PURCHASES_PER_LEAD = 3;
 

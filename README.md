@@ -4,10 +4,10 @@ A lead-generation marketplace for rooftop solar in Hyderabad, Telangana. Homeown
 get a free savings + PM Surya Ghar subsidy estimate and request a quote; verified
 local installers buy credits and unlock leads in their service area.
 
-> **Status:** Phases 1–2 complete — project scaffold, Prisma + SQLite, seed data,
-> the public landing page, working savings/subsidy calculator, end-to-end lead
-> capture, subsidy guide, FAQ, and SEO blog. Installer portal and admin panel land
-> in later phases.
+> **Status:** Phases 1–3 complete — public site (landing, calculator, lead capture,
+> subsidy guide, FAQ, blog) plus the full **installer portal**: auth, dashboard,
+> credit wallet, masked available-leads, unlock-with-credits, and my-leads. Admin
+> panel lands in Phase 4.
 
 ## Tech stack
 
@@ -71,6 +71,26 @@ Open <http://localhost:3000>.
 3. **FAQ** (`/faq`) — expandable questions.
 4. **Blog** (`/blog`) — lists the 3 seeded posts; click into `/blog/[slug]` to read
    the rendered Markdown.
+
+## What to test in Phase 3 (installer portal)
+
+1. Go to `/installer/login` and log in as `ravi@sunsure.example.com` / `installer12345`
+   (Ravi serves pincodes 500081/500032/500084 and starts with 200 credits).
+2. **Dashboard** (`/installer/dashboard`) — credit balance, available-leads count,
+   leads unlocked, and recent wallet activity.
+3. **Available leads** (`/installer/available-leads`) — leads in Ravi's pincodes with
+   the name/phone **masked**; click **"Unlock for 50 credits"** → credits drop by 50,
+   the lead moves to *My leads*, and contact details are revealed.
+4. **My leads** (`/installer/my-leads`) — unlocked leads with full phone + a WhatsApp
+   click-to-chat link prefilled for that homeowner.
+5. **Buy credits** (`/installer/buy-credits`) — demo top-up packs (Razorpay stubbed;
+   clicking adds credits and logs a TOPUP transaction).
+6. **Guards** — visiting `/installer/dashboard` while logged out redirects to login.
+   New signups (`/installer/signup`) start *unverified* with 0 credits and can't unlock
+   until an admin verifies them (Phase 4).
+
+The 3-purchases-per-lead cap, duplicate-unlock prevention, out-of-area blocking, and
+credit deduction are enforced atomically in a DB transaction.
 
 ## Test accounts (after seeding)
 

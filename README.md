@@ -20,7 +20,9 @@ local installers buy credits and unlock leads in their service area.
 
 ## Getting started
 
-Requires Node 18+.
+Requires Node 18+. The project uses **PostgreSQL** (so it matches production).
+The fastest local database is a free [Neon](https://neon.tech) project — create one
+and copy its connection string.
 
 ```bash
 # 1. Install dependencies
@@ -28,10 +30,12 @@ npm install
 
 # 2. Set up environment
 cp .env.example .env
-#   (defaults work out of the box for local SQLite dev)
+#   Set DATABASE_URL to your Postgres/Neon connection string, and set
+#   NEXTAUTH_SECRET (run: openssl rand -base64 32).
 
-# 3. Create the database and generate the Prisma client
-npx prisma db push
+# 3. Apply the schema (creates the tables) and generate the Prisma client
+npx prisma migrate deploy
+npx prisma generate
 
 # 4. Seed sample data (admin, installers, leads, blog posts)
 npm run seed
@@ -41,6 +45,11 @@ npm run dev
 ```
 
 Open <http://localhost:3000>.
+
+> **Prefer local SQLite instead?** Set `provider = "sqlite"` in
+> `prisma/schema.prisma` and `DATABASE_URL="file:./dev.db"` in `.env`, then run
+> `npx prisma db push && npm run seed`. Don't commit that schema change — production
+> uses Postgres.
 
 > **Note on this environment:** Prisma downloads its engine binaries on install.
 > If you're behind a proxy and `npm install`'s postinstall fails, run
@@ -136,47 +145,67 @@ Payments are **stubbed** — the "Buy now" button credits the wallet instantly. 
 Razorpay integration point is marked with a `TODO(payments)` in
 [`src/app/installer/(portal)/buy-credits/actions.ts`](src/app/installer/(portal)/buy-credits/actions.ts).
 
-## Switching to Postgres + deploying to Vercel
+## Deploying to Vercel (with Neon Postgres)
 
-**1. Switch the datasource to Postgres**
+The repo is already configured for this: Prisma uses `postgresql`, an initial
+migration lives in `prisma/migrations/0_init`, and [`vercel.json`](vercel.json) runs
+`prisma generate && prisma migrate deploy && next build` on every deploy — so the
+database schema is created/updated automatically.
 
-In `prisma/schema.prisma`:
+> Vercel's free **Hobby** plan is fine for testing/demos. Its terms reserve Hobby for
+> non-commercial use, so move to **Pro** once you point real marketing/ads at the site.
 
-```prisma
-datasource db {
-  provider = "postgresql"   // was "sqlite"
-  url      = env("DATABASE_URL")
-}
+**1. Create a free Postgres database**
+
+Sign up at [neon.tech](https://neon.tech) (or Supabase / Vercel Postgres), create a
+project, and copy the connection string. For Neon it looks like:
+
+```
+postgresql://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
 ```
 
-**2. Provision a Postgres database** (Vercel Postgres, Neon, Supabase, etc.) and copy
-its connection string.
+**2. Import the repo in Vercel**
 
-**3. Set environment variables** (locally in `.env`, and in the Vercel project
-settings → Environment Variables):
+Push to GitHub → [vercel.com](https://vercel.com) → **Add New… → Project** → import
+this repository. Vercel auto-detects Next.js.
+
+**3. Set environment variables** in the Vercel project (Settings → Environment
+Variables) — and locally in `.env`:
 
 | Variable | Notes |
 |----------|-------|
-| `DATABASE_URL` | Postgres connection string |
-| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Your production URL, e.g. `https://yourdomain.com` |
-| `NEXT_PUBLIC_SITE_URL` | Same production URL (used for sitemap/SEO) |
-| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Your real WhatsApp business number |
+| `DATABASE_URL` | Your Neon/Postgres connection string (include `?sslmode=require` for Neon) |
+| `NEXTAUTH_SECRET` | Generate with `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Your deployment URL, e.g. `https://your-app.vercel.app` |
+| `NEXT_PUBLIC_SITE_URL` | Same URL (used for sitemap/canonical/SEO) |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Your real WhatsApp number, e.g. `9198XXXXXXXX` (no `+`) |
 | `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Admin login created by the seed |
 
-**4. Create the schema and (optionally) seed:**
+**4. Deploy.** The build runs the migration and creates all tables in your database.
+
+**5. Seed the initial data once** (creates the admin login + sample installers, leads
+and blog posts). From your machine, with `DATABASE_URL` pointed at the **same** Neon
+database:
 
 ```bash
-npx prisma migrate deploy   # or: npx prisma db push
-npm run seed                # optional sample data
+npm run seed
 ```
 
-**5. Deploy to Vercel**
+That's it — your site is live. `robots.txt` and `sitemap.xml` are generated from
+`NEXT_PUBLIC_SITE_URL` automatically.
 
-- Push this repo to GitHub and import it in Vercel.
-- The `postinstall` script runs `prisma generate` automatically on every build.
-- Set the env vars above, then deploy. `robots.txt` and `sitemap.xml` are generated
-  automatically from `NEXT_PUBLIC_SITE_URL`.
+> **Going to production for real?** Before marketing: set strong admin credentials,
+> a unique `NEXTAUTH_SECRET`, your real WhatsApp number, and integrate Razorpay for
+> credit purchases (see the `TODO(payments)` in `buy-credits/actions.ts`). You may
+> also want to re-seed without the sample leads so installers only see real enquiries.
+
+### Deploying to Render instead
+
+Render works too: create a **PostgreSQL** instance + a **Web Service** from this repo
+with build command `npm install && npx prisma migrate deploy && npm run build` and
+start command `npm start`. Set the same environment variables, then run `npm run seed`
+once from the Render shell. (A ~$7/mo Starter web service stays always-on; the free
+tier sleeps when idle.)
 
 > **First production admin:** since signup only creates installers, the admin account
 > comes from the seed (`npm run seed`). To create an admin without reseeding, insert a

@@ -4,9 +4,10 @@ A lead-generation marketplace for rooftop solar in Hyderabad, Telangana. Homeown
 get a free savings + PM Surya Ghar subsidy estimate and request a quote; verified
 local installers buy credits and unlock leads in their service area.
 
-> **Status:** Phase 1 complete — project scaffold, Prisma + SQLite, seed data, the
-> public landing page, and a working savings/subsidy calculator. Lead capture,
-> installer portal, and admin panel land in later phases.
+> **Status:** Phases 1–2 complete — project scaffold, Prisma + SQLite, seed data,
+> the public landing page, working savings/subsidy calculator, end-to-end lead
+> capture, subsidy guide, FAQ, and SEO blog. Installer portal and admin panel land
+> in later phases.
 
 ## Tech stack
 
@@ -58,6 +59,18 @@ Open <http://localhost:3000>.
 3. **Subsidy sanity check** — set the bill so the system rounds to 1 kW (e.g. ₹900),
    2 kW (e.g. ₹1,800), and 3 kW+ (e.g. ₹5,000): subsidy should be ₹30,000 / ₹60,000 /
    ₹78,000 respectively.
+
+## What to test in Phase 2
+
+1. **Lead form** (`/get-quote`) — fill name, phone, pincode, area, monthly bill,
+   property type. The right-hand panel previews your estimate live. Submit → you're
+   redirected to a **thank-you page** and a `Lead` is saved (estimated kW + subsidy
+   computed server-side). Try invalid input (bad phone/pincode) to see validation.
+   You can deep-link with prefill: `/get-quote?bill=3000&type=APARTMENT&pincode=500072`.
+2. **Subsidy guide** (`/subsidy-guide`) — SEO explainer with the slab table.
+3. **FAQ** (`/faq`) — expandable questions.
+4. **Blog** (`/blog`) — lists the 3 seeded posts; click into `/blog/[slug]` to read
+   the rendered Markdown.
 
 ## Test accounts (after seeding)
 

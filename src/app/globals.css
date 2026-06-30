@@ -47,3 +47,45 @@ body {
     @apply w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base shadow-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
   }
 }
+
+/* Lightweight prose styling for rendered Markdown (blog posts). */
+.prose {
+  @apply text-slate-700 leading-relaxed;
+}
+.prose h1 {
+  @apply mt-0 mb-4 text-3xl font-extrabold text-slate-900;
+}
+.prose h2 {
+  @apply mt-8 mb-3 text-xl font-bold text-slate-900;
+}
+.prose h3 {
+  @apply mt-6 mb-2 text-lg font-semibold text-slate-900;
+}
+.prose p {
+  @apply my-4;
+}
+.prose ul {
+  @apply my-4 list-disc space-y-1 pl-6;
+}
+.prose ol {
+  @apply my-4 list-decimal space-y-1 pl-6;
+}
+.prose a {
+  @apply font-medium text-brand-600 underline;
+}
+.prose strong {
+  @apply font-semibold text-slate-900;
+}
+.prose table {
+  @apply my-5 w-full border-collapse overflow-hidden rounded-lg text-sm;
+}
+.prose th,
+.prose td {
+  @apply border border-slate-200 px-3 py-2 text-left;
+}
+.prose th {
+  @apply bg-slate-50 font-semibold text-slate-700;
+}
+.prose code {
+  @apply rounded bg-slate-100 px-1 py-0.5 text-sm;
+}

@@ -1,0 +1,87 @@
+// Prisma schema for the Solar Leads Marketplace.
+//
+// Local development uses SQLite. To run in production on Postgres (e.g. Vercel),
+// change `provider` below to "postgresql" and point DATABASE_URL at your
+// Postgres instance. The models themselves are portable across both.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// A homeowner enquiry. This is the product we sell to installers.
+model Lead {
+  id               String         @id @default(cuid())
+  name             String
+  phone            String
+  pincode          String
+  area             String
+  monthlyBill      Int
+  propertyType     String // "INDEPENDENT_HOUSE" | "APARTMENT" | "COMMERCIAL"
+  estimatedKW      Float
+  estimatedSubsidy Int
+  status           String         @default("NEW") // NEW | SOLD | CLOSED
+  createdAt        DateTime       @default(now())
+  purchases        LeadPurchase[]
+}
+
+// A solar installer who buys leads.
+model Installer {
+  id                  String              @id @default(cuid())
+  name                String
+  companyName         String
+  email               String              @unique
+  passwordHash        String
+  phone               String
+  serviceAreaPincodes String // comma-separated list of pincodes
+  credits             Int                 @default(0)
+  verified            Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  purchases           LeadPurchase[]
+  transactions        CreditTransaction[]
+}
+
+// Join record: one installer unlocking one lead. Capped at 3 per lead.
+model LeadPurchase {
+  id           String    @id @default(cuid())
+  leadId       String
+  installerId  String
+  creditsSpent Int
+  createdAt    DateTime  @default(now())
+  lead         Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  installer    Installer @relation(fields: [installerId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, installerId])
+}
+
+// Wallet ledger for installers.
+model CreditTransaction {
+  id          String    @id @default(cuid())
+  installerId String
+  amount      Int // positive for TOPUP, positive magnitude for SPEND (type disambiguates)
+  type        String // TOPUP | SPEND
+  note        String?
+  createdAt   DateTime  @default(now())
+  installer   Installer @relation(fields: [installerId], references: [id], onDelete: Cascade)
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model BlogPost {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  title           String
+  excerpt         String
+  contentMarkdown String
+  publishedAt     DateTime?
+  createdAt       DateTime  @default(now())
+}

@@ -184,8 +184,20 @@ Variables) — and locally in `.env`:
 **4. Deploy.** The build runs the migration and creates all tables in your database.
 
 **5. Seed the initial data once** (creates the admin login + sample installers, leads
-and blog posts). From your machine, with `DATABASE_URL` pointed at the **same** Neon
-database:
+and blog posts). Two ways:
+
+*Option A — browser (no terminal needed):* set a `SEED_SECRET` env var in your host to
+a long random value, redeploy, then visit:
+
+```
+https://your-app.vercel.app/api/seed?key=YOUR_SEED_SECRET
+```
+
+It seeds the database and shows your logins. **Then remove `SEED_SECRET` and redeploy**
+so the route is disabled and your data can't be wiped again. (Without `SEED_SECRET` set,
+the route returns 403.)
+
+*Option B — terminal:* with `DATABASE_URL` pointed at the **same** Neon database:
 
 ```bash
 npm run seed

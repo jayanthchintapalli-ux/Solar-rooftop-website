@@ -47,7 +47,7 @@ export const SITE_URL = (
 
 /** Contact: WhatsApp number (international format, no "+"). */
 export const WHATSAPP_NUMBER =
-  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919390185447";
 
 /** Build a wa.me click-to-chat link with an optional prefilled message. */
 export function whatsappLink(message?: string): string {

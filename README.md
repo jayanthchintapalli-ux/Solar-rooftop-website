@@ -4,10 +4,10 @@ A lead-generation marketplace for rooftop solar in Hyderabad, Telangana. Homeown
 get a free savings + PM Surya Ghar subsidy estimate and request a quote; verified
 local installers buy credits and unlock leads in their service area.
 
-> **Status:** Phases 1–3 complete — public site (landing, calculator, lead capture,
-> subsidy guide, FAQ, blog) plus the full **installer portal**: auth, dashboard,
-> credit wallet, masked available-leads, unlock-with-credits, and my-leads. Admin
-> panel lands in Phase 4.
+> **Status:** Phases 1–4 complete — public site (landing, calculator, lead capture,
+> subsidy guide, FAQ, blog), the full **installer portal** (auth, wallet, masked
+> available-leads, unlock-with-credits, my-leads), and the **admin panel** (analytics,
+> leads table, installer verify/credit management). Phase 5 is final polish.
 
 ## Tech stack
 
@@ -91,6 +91,19 @@ Open <http://localhost:3000>.
 
 The 3-purchases-per-lead cap, duplicate-unlock prevention, out-of-area blocking, and
 credit deduction are enforced atomically in a DB transaction.
+
+## What to test in Phase 4 (admin panel)
+
+1. Log in at `/admin/login` as `admin@example.com` / `admin12345`.
+2. **Overview** (`/admin`) — analytics cards: total leads, leads this week, credits
+   sold, estimated revenue, verified/total installers, leads unlocked.
+3. **Leads** (`/admin/leads`) — every lead with full contact details, estimated kW /
+   subsidy, how many installers bought it (`N/3`), status, and date.
+4. **Installers** (`/admin/installers`) — Verify/Unverify each installer and adjust
+   their credits with the +/− controls (each change writes a ledger entry; deducting
+   below zero is blocked).
+5. **Guards** — an installer who logs in and visits `/admin` is redirected to the
+   installer login; logged-out `/admin` redirects to `/admin/login`.
 
 ## Test accounts (after seeding)
 

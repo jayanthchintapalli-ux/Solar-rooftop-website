@@ -20,6 +20,7 @@ export default function Navbar() {
           </span>
         </Link>
 
+        {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((l) => (
             <Link
@@ -38,9 +39,35 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        <Link href="/get-quote" className="btn-primary !py-2 !px-3 text-sm md:hidden">
-          Free quote
-        </Link>
+        {/* Mobile: quick CTA + CSS-only dropdown menu via <details> */}
+        <div className="flex items-center gap-2 md:hidden">
+          <Link href="/get-quote" className="btn-primary !py-2 !px-3 text-sm">
+            Free quote
+          </Link>
+          <details className="relative">
+            <summary className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-300 text-slate-700">
+              <span className="text-lg leading-none" aria-label="Open menu">☰</span>
+            </summary>
+            <div className="absolute right-0 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+              {navLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <div className="my-1 border-t border-slate-100" />
+              <Link
+                href="/installer/login"
+                className="block rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                Installer login
+              </Link>
+            </div>
+          </details>
+        </div>
       </div>
     </header>
   );

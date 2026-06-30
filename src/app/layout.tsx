@@ -3,9 +3,10 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFab from "@/components/WhatsAppFab";
+import { SITE_URL } from "@/lib/config";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "HyderabadSolar — Free rooftop solar savings & subsidy calculator",
     template: "%s | HyderabadSolar",

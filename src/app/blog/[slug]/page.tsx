@@ -45,8 +45,21 @@ export default async function BlogPostPage({
 
   const html = marked.parse(post.contentMarkdown) as string;
 
+  const articleJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.publishedAt.toISOString(),
+    author: { "@type": "Organization", name: "HyderabadSolar" },
+  };
+
   return (
     <article className="container-page py-10">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+      />
       <div className="mx-auto max-w-3xl">
         <Link href="/blog" className="text-sm font-medium text-brand-600 hover:underline">
           ← All posts

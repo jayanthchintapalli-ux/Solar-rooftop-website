@@ -40,6 +40,11 @@ export const MAX_PURCHASES_PER_LEAD = 3;
 /** Seeded "social proof" counter shown on the homepage. */
 export const HOMEOWNERS_HELPED = 1240;
 
+/** Public site URL (used for SEO canonical/sitemap). No trailing slash. */
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+).replace(/\/$/, "");
+
 /** Contact: WhatsApp number (international format, no "+"). */
 export const WHATSAPP_NUMBER =
   process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919999999999";

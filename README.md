@@ -4,17 +4,19 @@ A lead-generation marketplace for rooftop solar in Hyderabad, Telangana. Homeown
 get a free savings + PM Surya Ghar subsidy estimate and request a quote; verified
 local installers buy credits and unlock leads in their service area.
 
-> **Status:** Phases 1–4 complete — public site (landing, calculator, lead capture,
+> **Status:** Complete (Phases 1–5). Public site (landing, calculator, lead capture,
 > subsidy guide, FAQ, blog), the full **installer portal** (auth, wallet, masked
-> available-leads, unlock-with-credits, my-leads), and the **admin panel** (analytics,
-> leads table, installer verify/credit management). Phase 5 is final polish.
+> available-leads, unlock-with-credits, my-leads), the **admin panel** (analytics,
+> leads table, installer verify/credit management), plus SEO (sitemap/robots/JSON-LD),
+> loading/error/404 states, and a mobile menu.
 
 ## Tech stack
 
 - **Next.js (App Router) + TypeScript**
 - **Tailwind CSS** (mobile-first)
 - **Prisma ORM** with **SQLite** for local dev (switch to Postgres for production via `DATABASE_URL`)
-- NextAuth credentials auth (installer + admin roles) — added in later phases
+- **NextAuth** credentials auth (JWT sessions) with two roles: `INSTALLER` and `ADMIN`
+- Server actions for forms, lead unlocks, top-ups, and admin operations
 
 ## Getting started
 
@@ -123,28 +125,113 @@ calculation logic is in [`src/lib/solar.ts`](src/lib/solar.ts).
 - Tariff: ₹8/unit · System cost: ₹55,000/kW
 - PM Surya Ghar subsidy: ₹30,000/kW (first 2 kW) + ₹18,000 (3rd kW), capped at ₹78,000
 
-## Switching to Postgres for production
+## Credit economics (configurable)
 
-1. In `prisma/schema.prisma`, change `datasource db { provider = "sqlite" }` to
-   `provider = "postgresql"`.
-2. Set `DATABASE_URL` to your Postgres connection string.
-3. Run `npx prisma migrate deploy` (or `prisma db push`) against the new database,
-   then `npm run seed` if you want sample data.
+- Unlocking a lead costs **50 credits** (`CREDITS_PER_LEAD_UNLOCK`).
+- A credit is priced at **₹10** (`CREDIT_PRICE_INR`) — so one lead ≈ ₹500.
+- A lead can be sold to at most **3 installers** (`MAX_PURCHASES_PER_LEAD`).
+- Top-up packs: Starter 100 / Growth 250 / Pro 500 (`CREDIT_PACKS`).
 
-Deploy to Vercel by setting `DATABASE_URL`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL` as
-environment variables (full deploy guide in Phase 5).
+Payments are **stubbed** — the "Buy now" button credits the wallet instantly. The
+Razorpay integration point is marked with a `TODO(payments)` in
+[`src/app/installer/(portal)/buy-credits/actions.ts`](src/app/installer/(portal)/buy-credits/actions.ts).
+
+## Switching to Postgres + deploying to Vercel
+
+**1. Switch the datasource to Postgres**
+
+In `prisma/schema.prisma`:
+
+```prisma
+datasource db {
+  provider = "postgresql"   // was "sqlite"
+  url      = env("DATABASE_URL")
+}
+```
+
+**2. Provision a Postgres database** (Vercel Postgres, Neon, Supabase, etc.) and copy
+its connection string.
+
+**3. Set environment variables** (locally in `.env`, and in the Vercel project
+settings → Environment Variables):
+
+| Variable | Notes |
+|----------|-------|
+| `DATABASE_URL` | Postgres connection string |
+| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Your production URL, e.g. `https://yourdomain.com` |
+| `NEXT_PUBLIC_SITE_URL` | Same production URL (used for sitemap/SEO) |
+| `NEXT_PUBLIC_WHATSAPP_NUMBER` | Your real WhatsApp business number |
+| `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` | Admin login created by the seed |
+
+**4. Create the schema and (optionally) seed:**
+
+```bash
+npx prisma migrate deploy   # or: npx prisma db push
+npm run seed                # optional sample data
+```
+
+**5. Deploy to Vercel**
+
+- Push this repo to GitHub and import it in Vercel.
+- The `postinstall` script runs `prisma generate` automatically on every build.
+- Set the env vars above, then deploy. `robots.txt` and `sitemap.xml` are generated
+  automatically from `NEXT_PUBLIC_SITE_URL`.
+
+> **First production admin:** since signup only creates installers, the admin account
+> comes from the seed (`npm run seed`). To create an admin without reseeding, insert a
+> row into `AdminUser` with a bcrypt-hashed password.
+
+## SEO & polish
+
+- Per-page `<title>`/description metadata, OpenGraph tags, and `metadataBase`.
+- `app/sitemap.ts` (static routes + published blog posts) and `app/robots.ts`
+  (private `/installer`, `/admin`, `/api` areas disallowed).
+- JSON-LD structured data: `FAQPage` on `/faq`, `Article` on blog posts.
+- `loading.tsx` skeletons, a global `error.tsx` boundary, and a custom `not-found.tsx`.
+- Mobile-first throughout, with a CSS-only mobile navigation menu.
 
 ## Project structure
 
 ```
 prisma/
-  schema.prisma     # full data model (Lead, Installer, LeadPurchase, ...)
-  seed.ts           # admin, installers, leads, blog posts
+  schema.prisma          # data model (Lead, Installer, LeadPurchase,
+                         #   CreditTransaction, AdminUser, BlogPost)
+  seed.ts                # admin, installers, leads, blog posts
 src/
-  app/              # App Router pages (/, /calculator, ...)
-  components/        # Navbar, Footer, Calculator, WhatsApp button
+  app/
+    page.tsx             # landing page
+    calculator/          # savings + subsidy calculator
+    get-quote/           # lead form + server action + thank-you
+    subsidy-guide/  faq/  blog/   # SEO content pages
+    installer/
+      login/  signup/    # installer auth
+      (portal)/          # protected: dashboard, available-leads,
+                         #   my-leads, buy-credits (+ server actions)
+    admin/
+      login/
+      (panel)/           # protected: overview, leads, installers
+    api/auth/[...nextauth]/   # NextAuth route handler
+    sitemap.ts  robots.ts  error.tsx  not-found.tsx  loading.tsx
+  components/             # Navbar, Footer, Calculator, LeadForm,
+                         #   UnlockButton, WhatsAppFab, Spinner, ...
   lib/
-    config.ts       # editable business constants
-    solar.ts        # core calculator math (pure, testable)
-    prisma.ts       # Prisma client singleton
+    config.ts            # editable business constants
+    solar.ts             # core calculator math (pure, testable)
+    auth.ts              # NextAuth options (credentials, roles)
+    session.ts           # requireInstaller / requireAdmin guards
+    leads.ts             # masking + service-area helpers
+    prisma.ts            # Prisma client singleton
+  types/next-auth.d.ts   # session/JWT role typing
 ```
+
+## Data model summary
+
+| Model | Purpose |
+|-------|---------|
+| `Lead` | Homeowner enquiry (contact, bill, estimated kW/subsidy, status) |
+| `Installer` | Partner account (credits, service-area pincodes, verified) |
+| `LeadPurchase` | One installer unlocking one lead (unique per pair) |
+| `CreditTransaction` | Wallet ledger (`TOPUP` / `SPEND`) |
+| `AdminUser` | Admin login |
+| `BlogPost` | SEO content (markdown) |
